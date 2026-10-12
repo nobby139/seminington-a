@@ -22,8 +22,25 @@ header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;paddin
 
 /* Main */
 main{flex:1;padding:20px}
-.panel{max-width:1400px;margin:10px auto 14px;background:#ffffffcc;border-radius:8px;padding:12px}
-#status{margin-top:8px;font-size:12px;color:#555}
+.panel{max-width:1400px;margin:10px auto 14px;background:#ffffffcc;border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+#status{margin-top:0;font-size:12px;color:#555}
+
+/* Season Filter Dropdown Styling */
+.season-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+.season-filter select {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
 
 /* Table */
 .table-wrap{max-width:1400px;margin:0 auto;background:#fff;border-radius:8px;padding:12px;overflow-x:auto}
@@ -67,6 +84,17 @@ footer{margin-top:auto;text-align:center;padding:16px 20px 22px;font-size:12px;c
 
 <div class="panel">
   <div id="status"></div>
+  
+  <!-- Season Dropdown Added Here -->
+  <div class="season-filter">
+    <label for="seasonSelect">Season:</label>
+    <select id="seasonSelect" onchange="filterBySeason()">
+      <option value="2026-2027">2026–2027</option>
+      <option value="2025-2026" selected>2025–2026</option>
+      <option value="2024-2025">2024–2025</option>
+      <option value="2023-2024">2023–2024</option>
+    </select>
+  </div>
 </div>
 
 <div class="table-wrap">
@@ -74,7 +102,7 @@ footer{margin-top:auto;text-align:center;padding:16px 20px 22px;font-size:12px;c
     <thead>
       <tr>
         <th>Date</th>
-        <th>Day</Th>
+        <th>Day</th>
         <th>Fixture</th>
         <th>Points</th>
         <th>Venue</th>
