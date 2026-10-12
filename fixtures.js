@@ -1,7 +1,5 @@
 // fixtures.js
-// GUARANTEED BASELINE for Fixtures_Web.csv
-// Shows ALL fixtures for the season
-// Uses Points columns for score and formats halves as fractions
+// Handles loading, parsing, and season-filtering for Fixtures_Web.csv
 
 function parseCSV(text) {
   return text
@@ -22,8 +20,33 @@ function formatHalf(v) {
   return String(n);
 }
 
+// Helper to convert CSV date string (e.g., "29-Aug-25") into a season string ("YYYY-YYYY")
+function getSeasonFromDate(dateStr) {
+  const parsedDate = new Date(dateStr);
+  if (isNaN(parsedDate)) return "";
+
+  const month = parsedDate.getMonth(); // 0 = Jan, 7 = Aug, 11 = Dec
+  let year = parsedDate.getFullYear();
+
+  // Handle 2-digit years if necessary (e.g. "25" -> 2025)
+  if (year < 100) {
+    year += 2000;
+  }
+
+  // August (7) to December (11) belong to the starting year of the season
+  if (month >= 7) {
+    return `${year}-${year + 1}`;
+  } else {
+    // January (0) to July (6) belong to the season that started the previous year
+    return `${year - 1}-${year}`;
+  }
+}
+
 const tbody = document.getElementById("tableBody");
 const status = document.getElementById("status");
+
+// Keep all fixtures globally so we can re-filter without re-fetching
+let allFixtures = [];
 
 fetch("Fixtures_Web.csv", { cache: "no-store" })
   .then(r => {
@@ -39,7 +62,7 @@ fetch("Fixtures_Web.csv", { cache: "no-store" })
 
     const rows = grid.slice(DATA_START_INDEX);
 
-    const fixtures = rows
+    allFixtures = rows
       .filter(r => r[0] && r[0].includes("-")) // keep rows with a date like 29-Aug-25
       .map(r => {
         const date = r[0];
@@ -66,21 +89,39 @@ fetch("Fixtures_Web.csv", { cache: "no-store" })
         };
       });
 
-    tbody.innerHTML = fixtures.map(x => `
-      <tr>
-        <td>${x.date}</td>
-        <td>${x.day}</td>
-        <td>${x.fixture}</td>
-        <td>${x.points}</td>
-        <td>${x.venue}</td>
-        <td>${x.alley}</td>
-        <td>${x.competition}</td>
-      </tr>
-    `).join("");
-
-    status.textContent = `Loaded ${fixtures.length} fixtures for the season.`;
+    // Run initial filter based on whatever option is selected in the dropdown
+    filterBySeason();
   })
   .catch(e => {
     status.style.color = "red";
     status.textContent = e.message;
   });
+
+// Filter function triggered by the dropdown onchange event
+function filterBySeason() {
+  const selectElement = document.getElementById("seasonSelect");
+  if (!selectElement) return;
+
+  const selectedSeason = selectElement.value;
+
+  // Filter fixtures matching the selected August-May season
+  const filtered = allFixtures.filter(x => {
+    const season = getSeasonFromDate(x.date);
+    return season === selectedSeason;
+  });
+
+  // Render the table rows
+  tbody.innerHTML = filtered.map(x => `
+    <tr>
+      <td>${x.date}</td>
+      <td>${x.day}</td>
+      <td>${x.fixture}</td>
+      <td>${x.points}</td>
+      <td>${x.venue}</td>
+      <td>${x.alley}</td>
+      <td>${x.competition}</td>
+    </tr>
+  `).join("");
+
+  status.textContent = `Showing ${filtered.length} fixtures for season ${selectedSeason} (Total loaded: ${allFixtures.length}).`;
+}
