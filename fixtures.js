@@ -1,5 +1,5 @@
 // fixtures.js
-// Handles loading, parsing, and season-filtering for Fixtures_Web.csv
+// Handles loading, parsing, and season-filtering for your fixtures data
 
 function parseCSV(text) {
   return text
@@ -28,7 +28,6 @@ function getSeasonFromDate(dateStr) {
   const month = parsedDate.getMonth(); // 0 = Jan, 7 = Aug, 11 = Dec
   let year = parsedDate.getFullYear();
 
-  // Handle 2-digit years if necessary (e.g. "25" -> 2025)
   if (year < 100) {
     year += 2000;
   }
@@ -45,7 +44,6 @@ function getSeasonFromDate(dateStr) {
 const tbody = document.getElementById("tableBody");
 const status = document.getElementById("status");
 
-// Keep all fixtures globally so we can re-filter without re-fetching
 let allFixtures = [];
 
 fetch("Fixtures_Web.csv", { cache: "no-store" })
@@ -56,10 +54,8 @@ fetch("Fixtures_Web.csv", { cache: "no-store" })
   .then(text => {
     const grid = parseCSV(text);
 
-    // ✅ YOUR FILE: header is ALWAYS on row index 3
-    const HEADER_ROW_INDEX = 3;
-    const DATA_START_INDEX = 4;
-
+    // Adjust row indices based on your CSV file structure
+    const DATA_START_INDEX = 4; // Adjust if your header row index is different
     const rows = grid.slice(DATA_START_INDEX);
 
     allFixtures = rows
@@ -85,11 +81,11 @@ fetch("Fixtures_Web.csv", { cache: "no-store" })
           points,
           venue: r[9] || "",
           alley: r[10] || "",
-          competition: r[14] || ""
+          competition: r[14] || r[11] || "" // Falls back to match details / competition column
         };
       });
 
-    // Run initial filter based on whatever option is selected in the dropdown
+    // Run initial filter based on the dropdown selection
     filterBySeason();
   })
   .catch(e => {
@@ -104,13 +100,11 @@ function filterBySeason() {
 
   const selectedSeason = selectElement.value;
 
-  // Filter fixtures matching the selected August-May season
   const filtered = allFixtures.filter(x => {
     const season = getSeasonFromDate(x.date);
     return season === selectedSeason;
   });
 
-  // Render the table rows
   tbody.innerHTML = filtered.map(x => `
     <tr>
       <td>${x.date}</td>
